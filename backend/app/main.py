@@ -5,12 +5,15 @@ from pathlib import Path
 
 from .routes.upload import router as upload_router
 from .routes.convert import router as convert_router
-
+from .routes.handwriting import router as handwriting_router
 
 BASE_DIR = Path(__file__).resolve().parent
 
 OUTPUT_DIR = BASE_DIR / "uploads" / "output"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+STATIC_DIR = BASE_DIR / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="Custom Handwriting Converter")
 
@@ -24,8 +27,16 @@ app.add_middleware(
 
 app.include_router(upload_router, prefix="/api")
 app.include_router(convert_router, prefix="/api")
+app.include_router(handwriting_router, prefix="/api")
 
-# ✅ Serve images from backend/app/uploads/output
+# Serve handwriting template
+app.mount(
+    "/static",
+    StaticFiles(directory=STATIC_DIR),
+    name="static"
+)
+
+# Serve generated images
 app.mount(
     "/outputs",
     StaticFiles(directory=OUTPUT_DIR),
