@@ -1,4 +1,4 @@
-# Custom Handwriting Converter ✍️
+# HandScript ✍️
 
 A web application that converts digital text into personalized handwriting.
 
