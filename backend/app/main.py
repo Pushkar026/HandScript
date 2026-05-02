@@ -9,40 +9,45 @@ from .routes.handwriting import router as handwriting_router
 
 BASE_DIR = Path(__file__).resolve().parent
 
-OUTPUT_DIR = BASE_DIR / "uploads" / "output"
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
 STATIC_DIR = BASE_DIR / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="Custom Handwriting Converter")
+app = FastAPI(title="HandScript API")
 
+# -----------------------------------
+# CORS
+# -----------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# -----------------------------------
+# Routes
+# -----------------------------------
 app.include_router(upload_router, prefix="/api")
+
 app.include_router(convert_router, prefix="/api")
+
 app.include_router(handwriting_router, prefix="/api")
 
-# Serve handwriting template
+# -----------------------------------
+# Static template files
+# -----------------------------------
 app.mount(
     "/static",
     StaticFiles(directory=STATIC_DIR),
     name="static"
 )
 
-# Serve generated images
-app.mount(
-    "/outputs",
-    StaticFiles(directory=OUTPUT_DIR),
-    name="outputs"
-)
-
+# -----------------------------------
+# Health check route
+# -----------------------------------
 @app.get("/")
 def root():
-    return {"message": "Backend is running"}
+    return {
+        "message": "HandScript backend is running"
+    }
