@@ -20,13 +20,12 @@ app = FastAPI(title="HandScript API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "hand-script-delta.vercel.app"
+        "https://hand-script-delta.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 # -----------------------------------
 # Routes
 # -----------------------------------
