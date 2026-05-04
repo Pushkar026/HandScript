@@ -12,6 +12,10 @@ BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
+# 👉 ADD THIS
+UPLOADS_DIR = BASE_DIR / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
 app = FastAPI(title="HandScript API")
 
 # -----------------------------------
@@ -20,19 +24,19 @@ app = FastAPI(title="HandScript API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:5173",
         "https://hand-script-delta.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # -----------------------------------
 # Routes
 # -----------------------------------
 app.include_router(upload_router, prefix="/api")
-
 app.include_router(convert_router, prefix="/api")
-
 app.include_router(handwriting_router, prefix="/api")
 
 # -----------------------------------
@@ -42,6 +46,13 @@ app.mount(
     "/static",
     StaticFiles(directory=STATIC_DIR),
     name="static"
+)
+
+# 👉 ADD THIS (VERY IMPORTANT)
+app.mount(
+    "/uploads",
+    StaticFiles(directory=UPLOADS_DIR),
+    name="uploads"
 )
 
 # -----------------------------------

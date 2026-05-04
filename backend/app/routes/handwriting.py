@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 # ---------------------------------
 load_dotenv()
 
+ENV = os.getenv("ENV", "development")
+
 # ---------------------------------
 # Configure Cloudinary
 # ---------------------------------
@@ -30,7 +32,6 @@ router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 UPLOAD_DIR = BASE_DIR / "uploads" / "custom_handwriting"
-
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -54,35 +55,38 @@ async def upload_handwriting(file: UploadFile = File(...)):
     # Generate unique file name
     # ---------------------------------
     unique_id = uuid.uuid4().hex
-
     extension = file.filename.split(".")[-1]
-
     temp_file_name = f"{unique_id}.{extension}"
-
     temp_file_path = UPLOAD_DIR / temp_file_name
 
     # ---------------------------------
-    # Save temporarily
+    # Save file locally
     # ---------------------------------
     with open(temp_file_path, "wb") as f:
         f.write(await file.read())
 
     # ---------------------------------
-    # Upload to Cloudinary
+    # ENV-based logic
     # ---------------------------------
-    upload_result = cloudinary.uploader.upload(
-        str(temp_file_path),
-        folder="handscript/custom_handwriting",
-        public_id=unique_id
-    )
+    if ENV == "development":
+        # 👉 keep locally
+        file_url = f"/uploads/custom_handwriting/{temp_file_name}"
 
-    # ---------------------------------
-    # Delete local temp file
-    # ---------------------------------
-    os.remove(temp_file_path)
+    else:
+        # 👉 upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            str(temp_file_path),
+            folder="handscript/custom_handwriting",
+            public_id=unique_id
+        )
+
+        file_url = upload_result["secure_url"]
+
+        # delete local temp file after upload
+        os.remove(temp_file_path)
 
     return {
         "message": "Handwriting template uploaded successfully",
         "file_id": unique_id,
-        "cloudinary_url": upload_result["secure_url"]
+        "url": file_url   # ✅ unified response
     }

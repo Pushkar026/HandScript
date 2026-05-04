@@ -49,7 +49,13 @@ function App() {
 
       const convertData = await convertRes.json();
 
-setImageUrl(convertData.image_url);
+const rawUrl = convertData.image_url;
+
+const fullUrl = rawUrl.startsWith("http")
+  ? rawUrl
+  : `${API_URL}${rawUrl}`;
+
+setImageUrl(fullUrl);
     } catch (error) {
       console.error(error);
       alert("Something went wrong.");

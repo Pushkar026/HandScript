@@ -18,6 +18,8 @@ from app.services.fonts import FONT_MAP
 # -----------------------------------
 load_dotenv()
 
+ENV = os.getenv("ENV", "development")
+
 # -----------------------------------
 # Configure Cloudinary
 # -----------------------------------
@@ -42,7 +44,6 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 BACKGROUND_PATH = (
     BASE_DIR / "assets" / "backgrounds" / "notebook.jpg"
 )
-
 
 # -----------------------------------
 # Request model
@@ -108,7 +109,6 @@ def convert_file(data: ConvertRequest):
     # Generate output image
     # -----------------------------------
     output_id = str(uuid.uuid4())
-
     output_path = OUTPUT_DIR / f"{output_id}.png"
 
     render_handwritten_text(
@@ -119,21 +119,27 @@ def convert_file(data: ConvertRequest):
     )
 
     # -----------------------------------
-    # Upload image to Cloudinary
+    # ENV-based logic
     # -----------------------------------
-    upload_result = cloudinary.uploader.upload(
-        str(output_path),
-        folder="handscript/generated_outputs",
-        public_id=output_id
-    )
+    if ENV == "development":
+        # 👉 keep locally
+        image_url = f"/uploads/output/{output_id}.png"
 
-    # -----------------------------------
-    # Delete local output image
-    # -----------------------------------
-    os.remove(output_path)
+    else:
+        # 👉 upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            str(output_path),
+            folder="handscript/generated_outputs",
+            public_id=output_id
+        )
+
+        image_url = upload_result["secure_url"]
+
+        # delete local file after upload
+        os.remove(output_path)
 
     return {
         "status": "ok",
         "output_id": output_id,
-        "image_url": upload_result["secure_url"]
+        "image_url": image_url   # ✅ unified response
     }

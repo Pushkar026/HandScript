@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 # -----------------------------
 load_dotenv()
 
+ENV = os.getenv("ENV", "development")  # default = development
+
 # -----------------------------
 # Configure Cloudinary
 # -----------------------------
@@ -31,7 +33,7 @@ router = APIRouter()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # -----------------------------
-# Temp upload directory
+# Upload directory
 # -----------------------------
 UPLOAD_DIR = BASE_DIR / "uploads" / "input"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
@@ -48,7 +50,6 @@ class TextUpload(BaseModel):
 def upload_text(data: TextUpload):
 
     file_id = str(uuid.uuid4())
-
     file_path = UPLOAD_DIR / f"{file_id}.txt"
 
     with open(file_path, "w", encoding="utf-8") as f:
@@ -68,28 +69,40 @@ def upload_text(data: TextUpload):
 def upload_handwritten(file: UploadFile = File(...)):
 
     file_id = str(uuid.uuid4())
-
     extension = file.filename.split(".")[-1]
 
     temp_file_path = UPLOAD_DIR / f"{file_id}.{extension}"
 
-    # Save temporarily
+    # Save file locally first
     with open(temp_file_path, "wb") as f:
         f.write(file.file.read())
 
-    # Upload to Cloudinary
-    upload_result = cloudinary.uploader.upload(
-        str(temp_file_path),
-        folder="handscript_templates",
-        public_id=file_id
-    )
+    # -----------------------------
+    # ENV-based logic
+    # -----------------------------
+    if ENV == "development":
+        # 👉 Local storage
+        return {
+            "status": "ok",
+            "file_id": file_id,
+            "file_type": "handwritten",
+            "local_path": str(temp_file_path)
+        }
 
-    # Delete local temp file
-    os.remove(temp_file_path)
+    else:
+        # 👉 Cloudinary upload
+        upload_result = cloudinary.uploader.upload(
+            str(temp_file_path),
+            folder="handscript_templates",
+            public_id=file_id
+        )
 
-    return {
-        "status": "ok",
-        "file_id": file_id,
-        "file_type": "handwritten",
-        "cloudinary_url": upload_result["secure_url"]
-    }
+        # Delete temp file after upload
+        os.remove(temp_file_path)
+
+        return {
+            "status": "ok",
+            "file_id": file_id,
+            "file_type": "handwritten",
+            "cloudinary_url": upload_result["secure_url"]
+        }
