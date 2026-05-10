@@ -199,13 +199,29 @@ http://localhost:5173
 
 # 🔑 Environment Variables
 
-## Backend `.env`
+## Frontend `.env`
 
 ```env
-PORT=8000
+VITE_API_URL=http://localhost:8000
 ```
 
 ---
+
+## Backend `.env`
+
+```env
+ENV=development
+
+FRONTEND_URL=http://localhost:5173
+
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+
+```
 
 # 🌐 Live Demo
 
